@@ -32,6 +32,7 @@ class Crawler():
         self.append_parameter_if_exists(parameters, end_time, 'end_time')
         self.append_parameter_if_exists(parameters, max_results, 'max_results')
         url = self.base_url + '/tweets/search/all'
+        header = self.keys.get_header_with_bearer_token(self.full_search_tweets)
         return self.caller.download(url, header, parameters)
 
 class Caller():
@@ -102,3 +103,9 @@ class Keys(metaclass=Singleton):
                     raise ValueError('All bearer tokens have been taken!')
                 else:
                     return function[name].pop()
+
+    def get_header_with_bearer_token(self, function) -> dict:
+        bearer_token = self.get_bearer_token(function)
+        return {
+            "Authorization": "Bearer {}".format(bearer_token)
+        }
