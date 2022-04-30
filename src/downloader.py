@@ -1,9 +1,27 @@
-import requests
-from tqdm import tqdm
-import os
 import datetime
+import logging
+import os
+import requests
+import shutil
 import time
 
+def create_log_dir():
+    dir = 'logs'
+    if os.path.exists(dir):
+        shutil.rmtree(dir)
+    os.makedirs(dir)
+
+def setup_logging():
+    log_file = 'logs/{}-{}.{}'.format(datetime.datetime.now().isoformat(), 'log', 'log')
+    logging.basicConfig(
+            filename= log_file,
+            filemode='w+',
+            format='%(asctime)s %(levelname)-8s %(message)s',
+            level=logging.INFO,
+            datefmt='%Y-%m-%d %H:%M:%S')
+
+create_log_dir()
+setup_logging()
 
 class Crawler():
 
@@ -20,7 +38,7 @@ class Crawler():
         if value is not None:
             parameters[name] = value
 
-    def full_search_tweets(self, query, start_time=None, end_time=None, max_results=None):
+    def full_search_tweets(self, query, start_time=None, end_time=None, max_results=None, tweet_amount=None):
         parameters = {
             'query': query,
             'expansions': self.expansions,
@@ -33,14 +51,12 @@ class Crawler():
         self.append_parameter_if_exists(parameters, max_results, 'max_results')
         url = self.base_url + '/tweets/search/all'
         header = self.keys.get_header_with_bearer_token(self.full_search_tweets)
-        return self.caller.download(url, header, parameters)
+        return self.caller.download(url, header, parameters, tweet_amount if tweet_amount else -1)
 
 
 class Caller():
 
-    def __init__(self):
-        self.started = datetime.datetime.now().isoformat()
-        self.refresh_window = 15 * 60
+    refresh_window = 15 * 60
 
     def get(self, url, header, parameters):
         response = requests.request("GET", url, headers=header, params=parameters)
@@ -56,26 +72,34 @@ class Caller():
             page_count += 1
             if not self.can_paginate(response, page_count, pages):
                 break
-            parameters['next_token'] = response.meta.next_token
+            parameters['next_token'] = response['meta']['next_token']
 
     def can_paginate(self, response, page_count, max_pages):
-        return hasattr(response.meta, 'next_token') and page_count != max_pages
+        has_meta = 'meta' in response.keys()
+        has_next_token = 'next_token' in response['meta'].keys()
+        return has_meta and has_next_token and page_count != max_pages
 
     def limit_handler(self, url, header, parameters, pages):
+        count = 0
+        pages = self.pages(url, header, parameters, pages)
+        started = datetime.datetime.now().isoformat()
         while True:
             try:
-                yield next(self.pages(url, header, parameters, pages))
+                yield next(pages)
+                count += 1
             except StopIteration:
+                logging.info('Downloader has gotten %d pages successfully.', count)
                 break
-            except Exception:
-                now = datetime.now().isoformat()
-                sleep_time = self.refresh_window - (now - self.started).total_seconds()
+            except Exception as e:
+                now = datetime.datetime.now().isoformat()
+                sleep_time = self.refresh_window - (now - started).total_seconds()
+                logging.error('%s has occurred. Sleeping %s seconds.', str(e), sleep_time)
                 time.sleep(sleep_time)
+                started = datetime.datetime.now().isoformat()
                 continue
 
-    def download(self, url, header, parameters, pages=-1):
-        description = 'Downloading'
-        return tqdm(self.limit_handler(url, header, parameters, pages), desc=description)
+    def download(self, url, header, parameters, pages):
+        return self.limit_handler(url, header, parameters, pages)
 
 
 class Singleton(type):
@@ -92,20 +116,26 @@ class Keys(metaclass=Singleton):
     lock = threading.Lock()
 
     def __init__(self):
-        self.tokens = set(os.getenv('TWITTER_BEARER_TOKENS').split(','))
+        self.tokens = self.read_tokens()
         self.functions = dict()
+
+    def read_tokens(self):
+        tokens = os.getenv('TWITTER_BEARER_TOKENS')
+        if tokens is None:
+            raise ValueError('TWITTER_BEARER_TOKENS enviroment variable was not found.')
+        return set(tokens.split(','))
 
     def get_bearer_token(self, function) -> str:
         name = function.__name__
         with self.lock:
             if name not in self.functions:
-                function[name] = self.tokens
+                self.functions[name] = self.tokens
                 return self.tokens.pop()
             else:
                 if len(function[name]) == 0:
                     raise ValueError('All bearer tokens have been taken!')
                 else:
-                    return function[name].pop()
+                    return self.functions[name].pop()
 
     def get_header_with_bearer_token(self, function) -> dict:
         bearer_token = self.get_bearer_token(function)
