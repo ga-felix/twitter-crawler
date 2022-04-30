@@ -79,10 +79,12 @@ class Caller():
         has_next_token = 'next_token' in response['meta'].keys()
         return has_meta and has_next_token and page_count != max_pages
 
+    def download(self, url, header, parameters, pages):
+        return self.limit_handler(url, header, parameters, pages)
+
     def limit_handler(self, url, header, parameters, pages):
-        count = 0
         pages = self.pages(url, header, parameters, pages)
-        started = datetime.datetime.now().isoformat()
+        started, count = self.now(), 0
         while True:
             try:
                 yield next(pages)
@@ -91,16 +93,17 @@ class Caller():
                 logging.info('Downloader has gotten %d pages successfully.', count)
                 break
             except Exception as e:
-                now = datetime.datetime.now().isoformat()
-                sleep_time = self.refresh_window - (now - started).total_seconds()
+                sleep_time = self.refresh_window - self.seconds_passed_since(started)
                 logging.error('%s has occurred. Sleeping %s seconds.', str(e), sleep_time)
                 time.sleep(sleep_time)
-                started = datetime.datetime.now().isoformat()
+                started = self.now()
                 continue
 
-    def download(self, url, header, parameters, pages):
-        return self.limit_handler(url, header, parameters, pages)
+    def seconds_passed_since(self, started):
+        return (self.now() - started).total_seconds()
 
+    def now(self):
+        return datetime.datetime.now().isoformat()
 
 class Singleton(type):
     _instances = {}
@@ -114,10 +117,10 @@ class Keys(metaclass=Singleton):
 
     import threading
     lock = threading.Lock()
+    functions = dict()
 
     def __init__(self):
         self.tokens = self.read_tokens()
-        self.functions = dict()
 
     def read_tokens(self):
         tokens = os.getenv('TWITTER_BEARER_TOKENS')
@@ -132,7 +135,7 @@ class Keys(metaclass=Singleton):
                 self.functions[name] = self.tokens
                 return self.tokens.pop()
             else:
-                if len(function[name]) == 0:
+                if len(self.functions[name]) == 0:
                     raise ValueError('All bearer tokens have been taken!')
                 else:
                     return self.functions[name].pop()
