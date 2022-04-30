@@ -133,11 +133,9 @@ class Keys(metaclass=Singleton):
         with self.lock:
             if name not in self.functions:
                 self.functions[name] = self.tokens
-                return self.tokens.pop()
             elif not self.functions[name]:
                 raise ValueError('All bearer tokens have been taken!')
-            else:
-                return self.functions[name].pop()
+            return self.functions[name].pop()
 
     def get_header_with_bearer_token(self, function) -> dict:
         bearer_token = self.get_bearer_token(function)
