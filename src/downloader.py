@@ -35,6 +35,7 @@ class Crawler():
         header = self.keys.get_header_with_bearer_token(self.full_search_tweets)
         return self.caller.download(url, header, parameters)
 
+
 class Caller():
 
     def __init__(self):
@@ -57,6 +58,9 @@ class Caller():
                 break
             parameters['next_token'] = response.meta.next_token
 
+    def can_paginate(self, response, page_count, max_pages):
+        return hasattr(response.meta, 'next_token') and page_count != max_pages
+
     def limit_handler(self, url, header, parameters, pages):
         while True:
             try:
@@ -72,9 +76,7 @@ class Caller():
     def download(self, url, header, parameters, pages=-1):
         description = 'Downloading'
         return tqdm(self.limit_handler(url, header, parameters, pages), desc=description)
-        
-    def can_paginate(self, response, page_count, max_pages):
-        return hasattr(response.meta, 'next_token') and page_count != max_pages
+
 
 class Singleton(type):
     _instances = {}
@@ -82,6 +84,7 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class Keys(metaclass=Singleton):
 
