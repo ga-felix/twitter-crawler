@@ -103,7 +103,7 @@ class Caller():
         return (self.now() - started).total_seconds()
 
     def now(self):
-        return datetime.datetime.now().isoformat()
+        return datetime.datetime.now()
 
 class Singleton(type):
     _instances = {}
