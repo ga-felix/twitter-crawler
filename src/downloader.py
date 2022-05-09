@@ -105,17 +105,23 @@ class Caller():
     def now(self):
         return datetime.datetime.now()
 
+import threading
+
 class Singleton(type):
+
+    _lock = threading.Lock()
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            with cls._lock:
+                if cls not in cls._instances:
+                    cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
 class Keys(metaclass=Singleton):
 
-    import threading
     lock = threading.Lock()
     functions = dict()
 
