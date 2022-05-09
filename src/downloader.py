@@ -107,6 +107,7 @@ class Caller():
 
 import threading
 
+
 class Singleton(type):
 
     _lock = threading.Lock()
