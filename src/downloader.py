@@ -20,8 +20,8 @@ def setup_logging():
             level=logging.INFO,
             datefmt='%Y-%m-%d %H:%M:%S')
 
-create_log_dir()
-setup_logging()
+#create_log_dir()
+#setup_logging()
 
 class Crawler():
 
@@ -90,11 +90,11 @@ class Caller():
                 yield next(pages)
                 count += 1
             except StopIteration:
-                logging.info('Downloader has gotten %d pages successfully.', count)
+                #logging.info('Downloader has gotten %d pages successfully.', count)
                 break
             except Exception as e:
                 sleep_time = self.refresh_window - self.seconds_passed_since(started)
-                logging.error('%s has occurred. Sleeping %s seconds.', str(e), sleep_time)
+                #logging.error('%s has occurred. Sleeping %s seconds.', str(e), sleep_time)
                 time.sleep(sleep_time)
                 started = self.now()
                 continue
@@ -104,6 +104,7 @@ class Caller():
 
     def now(self):
         return datetime.datetime.now()
+
 
 import threading
 
@@ -146,6 +147,4 @@ class Keys(metaclass=Singleton):
 
     def get_header_with_bearer_token(self, function) -> dict:
         bearer_token = self.get_bearer_token(function)
-        return {
-            "Authorization": "Bearer {}".format(bearer_token)
-        }
+        return { "Authorization": "Bearer {}".format(bearer_token) }
