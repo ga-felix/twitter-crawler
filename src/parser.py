@@ -20,9 +20,15 @@ class CsvFormat():
 
     def explode_referenced_tweets(self, payload: dict):
         for tweet in payload['data']:
-            for key in tweet['referenced_tweets'][0].keys():
-                tweet['reference_' + key] = tweet['referenced_tweets'][0][key]
+            for idx, ref in enumerate(tweet['referenced_tweets']):
+                tweet = self.append_referenced_tweets(tweet, idx)
         return payload
+
+    def append_referenced_tweets(self, tweet, index):
+        for key in tweet['referenced_tweets'][index].keys():
+            new_key = 'reference_' + key + '_' + str(index)
+            tweet[new_key] = tweet['referenced_tweets'][index][key]
+        return tweet
 
     def convert(self, payload: dict):
         payload = self.explode_referenced_tweets(payload)
