@@ -1,27 +1,9 @@
+import threading
 import datetime
-import logging
-import os
 import requests
-import shutil
 import time
+import os
 
-def create_log_dir():
-    dir = 'logs'
-    if os.path.exists(dir):
-        shutil.rmtree(dir)
-    os.makedirs(dir)
-
-def setup_logging():
-    log_file = 'logs/{}-{}.{}'.format(datetime.datetime.now().isoformat(), 'log', 'log')
-    logging.basicConfig(
-            filename= log_file,
-            filemode='w+',
-            format='%(asctime)s %(levelname)-8s %(message)s',
-            level=logging.INFO,
-            datefmt='%Y-%m-%d %H:%M:%S')
-
-#create_log_dir()
-#setup_logging()
 
 class Crawler():
 
@@ -45,12 +27,13 @@ class Crawler():
             'tweet.fields': self.tweet_fields,
             'user.fields': self.user_fields,
             'next_token': {}
-            }
+        }
         self.append_parameter_if_exists(parameters, start_time, 'start_time')
         self.append_parameter_if_exists(parameters, end_time, 'end_time')
         self.append_parameter_if_exists(parameters, max_results, 'max_results')
         url = self.base_url + '/tweets/search/all'
-        header = self.keys.get_header_with_bearer_token(self.full_search_tweets)
+        header = self.keys.get_header_with_bearer_token(
+            self.full_search_tweets)
         return self.caller.download(url, header, parameters, tweet_amount if tweet_amount else -1)
 
 
@@ -59,7 +42,8 @@ class Caller():
     refresh_window = 15 * 60
 
     def get(self, url, header, parameters):
-        response = requests.request("GET", url, headers=header, params=parameters)
+        response = requests.request(
+            "GET", url, headers=header, params=parameters)
         if response.status_code != 200:
             raise Exception(response.status_code, response.text)
         return response.json()
@@ -90,11 +74,10 @@ class Caller():
                 yield next(pages)
                 count += 1
             except StopIteration:
-                #logging.info('Downloader has gotten %d pages successfully.', count)
                 break
             except Exception as e:
-                sleep_time = self.refresh_window - self.seconds_passed_since(started)
-                #logging.error('%s has occurred. Sleeping %s seconds.', str(e), sleep_time)
+                sleep_time = self.refresh_window - \
+                    self.seconds_passed_since(started)
                 time.sleep(sleep_time)
                 started = self.now()
                 continue
@@ -106,9 +89,6 @@ class Caller():
         return datetime.datetime.now()
 
 
-import threading
-
-
 class Singleton(type):
 
     _lock = threading.Lock()
@@ -118,7 +98,8 @@ class Singleton(type):
         if cls not in cls._instances:
             with cls._lock:
                 if cls not in cls._instances:
-                    cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+                    cls._instances[cls] = super(
+                        Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -133,7 +114,8 @@ class Keys(metaclass=Singleton):
     def read_tokens(self):
         tokens = os.getenv('TWITTER_BEARER_TOKENS')
         if tokens is None:
-            raise ValueError('TWITTER_BEARER_TOKENS enviroment variable was not found.')
+            raise ValueError(
+                'TWITTER_BEARER_TOKENS enviroment variable was not found.')
         return set(tokens.split(','))
 
     def get_bearer_token(self, function) -> str:
@@ -147,4 +129,4 @@ class Keys(metaclass=Singleton):
 
     def get_header_with_bearer_token(self, function) -> dict:
         bearer_token = self.get_bearer_token(function)
-        return { "Authorization": "Bearer {}".format(bearer_token) }
+        return {"Authorization": "Bearer {}".format(bearer_token)}

@@ -160,5 +160,7 @@ cython_debug/
 #.idea/
 
 # Testing and validation
-src/main.py
 logs/
+src/cfg/**
+*.avro
+*.csv

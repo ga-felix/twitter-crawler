@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 class Parser():
 
     def __init__(self, format):
@@ -16,21 +13,20 @@ class CsvFormat():
         for tweet in payload['data']:
             for key in tweet['public_metrics'].keys():
                 tweet[key] = tweet['public_metrics'][key]
+            del tweet['public_metrics']
         return payload
 
     def explode_referenced_tweets(self, payload: dict):
         for tweet in payload['data']:
-            for idx, ref in enumerate(tweet['referenced_tweets']):
-                tweet = self.append_referenced_tweets(tweet, idx)
+            self.append_referenced_tweets(tweet)
         return payload
 
-    def append_referenced_tweets(self, tweet, index):
-        for key in tweet['referenced_tweets'][index].keys():
-            new_key = 'reference_' + key + '_' + str(index)
-            tweet[new_key] = tweet['referenced_tweets'][index][key]
-        return tweet
+    def append_referenced_tweets(self, tweet):
+        referenced_tweets = list()
+        for referenced_tweet in tweet['referenced_tweets']:
+            referenced_tweets.append(referenced_tweet['id'])
+        tweet['referenced_tweets'] = referenced_tweets
 
-    def convert(self, payload: dict):
-        payload = self.explode_referenced_tweets(payload)
+    def convert(self, payload: dict) -> list:
         payload = self.explode_public_metrics(payload)
-        return pd.DataFrame(payload['data'])
+        return payload['data']
