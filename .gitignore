@@ -164,3 +164,4 @@ logs/
 src/cfg/**
 *.avro
 *.csv
+avro/**
