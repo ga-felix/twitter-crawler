@@ -1,11 +1,11 @@
-import threading
-import datetime
-import requests
-import time
-import os
+from threading import Lock
+from datetime import datetime
+from requests import request
+from time import sleep
+from os import getenv
 
 
-class Crawler():
+class Crawler:
 
     def __init__(self, caller, keys):
         self.caller = caller
@@ -37,12 +37,12 @@ class Crawler():
         return self.caller.download(url, header, parameters, tweet_amount if tweet_amount else -1)
 
 
-class Caller():
+class Caller:
 
-    refresh_window = 15 * 60
+    refresh_window = 15 * 60  # That is 15 minutes =)
 
     def get(self, url, header, parameters):
-        response = requests.request(
+        response = request(
             "GET", url, headers=header, params=parameters)
         if response.status_code != 200:
             raise Exception(response.status_code, response.text)
@@ -78,7 +78,7 @@ class Caller():
             except Exception as e:
                 sleep_time = self.refresh_window - \
                     self.seconds_passed_since(started)
-                time.sleep(sleep_time)
+                sleep(sleep_time)
                 started = self.now()
                 continue
 
@@ -86,12 +86,12 @@ class Caller():
         return (self.now() - started).total_seconds()
 
     def now(self):
-        return datetime.datetime.now()
+        return datetime.now()
 
 
 class Singleton(type):
 
-    _lock = threading.Lock()
+    _lock = Lock()
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -105,14 +105,14 @@ class Singleton(type):
 
 class Keys(metaclass=Singleton):
 
-    lock = threading.Lock()
+    lock = Lock()
     functions = dict()
 
     def __init__(self):
         self.tokens = self.read_tokens()
 
     def read_tokens(self):
-        tokens = os.getenv('TWITTER_BEARER_TOKENS')
+        tokens = getenv('TWITTER_BEARER_TOKENS')
         if tokens is None:
             raise ValueError(
                 'TWITTER_BEARER_TOKENS enviroment variable was not found.')

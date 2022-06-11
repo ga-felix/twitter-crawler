@@ -1,0 +1,47 @@
+{
+  "name": "User",
+  "type": "record",
+  "namespace": "user.avro",
+  "fields": [
+    {
+      "name": "description",
+      "type": ["string","null"]
+    },
+    {
+      "name": "username",
+      "type": ["string","null"]
+    },
+    {
+      "name": "name",
+      "type": ["string","null"]
+    },
+    {
+      "name": "verified",
+      "type": ["boolean","null"]
+    },
+    {
+      "name": "created_at",
+      "type": ["string","null"]
+    },
+    {
+      "name": "id",
+      "type": ["string","null"]
+    },
+    {
+      "name": "followers_count",
+      "type": "int"
+    },
+    {
+      "name": "following_count",
+      "type": "int"
+    },
+    {
+      "name": "tweet_count",
+      "type": "int"
+    },
+    {
+      "name": "listed_count",
+      "type": "int"
+    }
+  ]
+}

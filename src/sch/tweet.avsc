@@ -5,44 +5,43 @@
   "fields": [
     {
       "name": "referenced_tweets",
-      "type": {
-        "type": "array",
-        "items": {
-          "name": "referenced_tweets_record",
-          "type": "record",
-          "fields": [
-            {
-              "name": "type",
-              "type": "string"
-            },
-            {
-              "name": "id",
-              "type": "string"
-            }
-          ]
-        }
-      }
+      "type": [{
+              "type": "array",
+              "items":[{
+                      "name": "referenced_tweets_record",
+                      "type": "record",
+                      "fields": [
+                        {
+                          "name": "type",
+                          "type": ["string","null"]
+                        },
+                        {
+                          "name": "id",
+                          "type": ["string","null"]
+                        }
+                      ]
+                    },"null"]
+            },"null"]
     },
     {
       "name": "text",
-      "type": "string"
+      "type": ["string","null"]
     },
     {
       "name": "author_id",
-      "type": "string"
+      "type": ["string","null"]
     },
     {
       "name": "lang",
-      "type": "string"
+      "type": ["string","null"]
     },
     {
       "name": "created_at",
-      "type": "int",
-      "logicalType": "date"
+      "type": ["string","null"]
     },
     {
       "name": "id",
-      "type": "string"
+      "type": ["string","null"]
     },
     {
       "name": "retweet_count",
