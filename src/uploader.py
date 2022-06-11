@@ -5,8 +5,7 @@ from os.path import isfile, join
 class GoogleCloudUploader:
 
     def __init__(self, keys_path: str):
-        login_command = 'gcloud auth activate-service-account --key-file={}'.format(
-            keys_path)
+        login_command = f'gcloud auth activate-service-account --key-file={keys_path}'
         system(login_command)
 
     def list_files(self, folder_path):
