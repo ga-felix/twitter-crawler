@@ -1,0 +1,31 @@
+{
+  "name": "Reference",
+  "type": "record",
+  "namespace": "reference.avro",
+  "fields": [
+    {
+      "name": "id",
+      "type": ["string","null"]
+    },
+    {
+      "name": "tweet_referrer",
+      "type": ["string","null"]
+    },
+    {
+      "name": "tweet_referenced",
+      "type": ["string","null"]
+    },
+        {
+      "name": "author_referrer",
+      "type": ["string","null"]
+    },
+    {
+      "name": "author_referenced",
+      "type": ["string","null"]
+    },
+    {
+      "name": "type",
+      "type": ["string","null"]
+    }
+  ]
+}

@@ -5,7 +5,7 @@
   "fields": [
     {
       "name": "referenced_tweets",
-      "type": [{
+      "type": ["null", {
               "type": "array",
               "items":[{
                       "name": "referenced_tweets_record",
@@ -21,7 +21,8 @@
                         }
                       ]
                     },"null"]
-            },"null"]
+            }],
+      "default": null
     },
     {
       "name": "text",

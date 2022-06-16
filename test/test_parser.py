@@ -41,6 +41,21 @@ class ParserTests(TestCase):
                     'verified': True,
                     'created_at': ''
                 }
+            ],
+            'tweets': [
+                {
+                'id': '125',
+                'text': 'Sample payload!',
+                'created_at': '',
+                'author_id': '124',
+                'public_metrics': {
+                    'retweet_count': 1,
+                    'like_count': 2,
+                    'quote_count': 1,
+                    'reply_count': 1
+                },
+                'lang': 'pt'
+            }
             ]
         }
     }
@@ -48,7 +63,7 @@ class ParserTests(TestCase):
     def get_dict_keys(self, any_dict):
         return list(any_dict.keys())
 
-    def test_should_parse_tweets_on_payload(self):
+    def test_tweet_parser(self):
         tweet_parser = TweetParser()
         tweets = tweet_parser.parse(self.payload)
         expected_fields = ['id',
@@ -63,7 +78,21 @@ class ParserTests(TestCase):
                            'lang']
         self.assertCountEqual(self.get_dict_keys(tweets[0]), expected_fields)
 
-    def test_should_parse_users_on_payload(self):
+    def test_referenced_tweet_parser(self):
+        referenced_tweet_parser = ReferencedTweetsParser()
+        tweets = referenced_tweet_parser.parse(self.payload)
+        expected_fields = ['id',
+                           'text',
+                           'created_at',
+                           'author_id',
+                           'retweet_count',
+                           'like_count',
+                           'quote_count',
+                           'reply_count',
+                           'lang']
+        self.assertCountEqual(self.get_dict_keys(tweets[0]), expected_fields)
+
+    def test_user_parser(self):
         user_parser = UserParser()
         users = user_parser.parse(self.payload)
         expected_fields = ['id',

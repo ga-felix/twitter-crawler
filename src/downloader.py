@@ -12,7 +12,7 @@ class Crawler:
         self.keys = keys
 
     base_url = 'https://api.twitter.com/2'
-    expansions = 'author_id,referenced_tweets.id.author_id,referenced_tweets.id,in_reply_to_user_id'
+    expansions = 'author_id,referenced_tweets.id.author_id,referenced_tweets.id'
     tweet_fields = 'id,text,created_at,author_id,public_metrics,referenced_tweets,lang'
     user_fields = 'id,username,description,public_metrics,verified,created_at'
 
