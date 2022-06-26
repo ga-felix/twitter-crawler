@@ -4,30 +4,32 @@ from src.downloader import Crawler, Caller, Keys
 
 class CrawlerTests(TestCase):
 
-    MINIMUM_TWEET_AMOUNT = 10
-    MINIMUM_PAGE_AMOUNT = 1
+    TWEET_AMOUNT = 10
+    PAGE_AMOUNT = 1
     TEST_KEYWORD = 'brasil'
 
-    def has_requested_page_number(self, iterations: int):
+    def has_requested_page_number(self):
         with self.subTest():
-            self.assertEqual(iterations, self.MINIMUM_PAGE_AMOUNT)
+            self.assertEqual(len(self._payloads), self.PAGE_AMOUNT)
 
-    def has_requested_tweet_number(self, payload: dict):
+    def has_requested_tweet_number(self):
         with self.subTest():
-            self.assertEqual(len(payload['data']), self.MINIMUM_TWEET_AMOUNT)
+            first_page = self._payloads[0]['data']
+            self.assertEqual(len(first_page), self.TWEET_AMOUNT)
 
-    def has_requested_string(self, payload: dict):
+    def has_requested_string(self):
         with self.subTest():
             has_string = True
-            for tweet in payload['data']:
-                if self.TEST_KEYWORD not in tweet['text'].lower():
-                    has_string = False
+            for payload in self._payloads:
+                for tweet in payload['data']:
+                    if self.TEST_KEYWORD not in tweet['text'].lower():
+                        has_string = False
             self.assertTrue(has_string)
 
     def test_full_search_tweets(self):
-        query, pages = f'{self.TEST_KEYWORD} lang:pt -is:retweet -is:quote', 0
-        for payload in Crawler(Caller(), Keys()).full_search_tweets(query, max_results=self.MINIMUM_TWEET_AMOUNT, pages=self.MINIMUM_PAGE_AMOUNT):
-            self.has_requested_string(payload)
-            self.has_requested_tweet_number(payload)
-            pages += 1
-        self.has_requested_page_number(pages)
+        query = f'\"{self.TEST_KEYWORD}\" lang:pt -is:retweet -is:quote'
+        self._payloads = [payload for payload in Crawler(Caller(), Keys()).full_search_tweets(
+            query, max_results=self.TWEET_AMOUNT, pages=self.PAGE_AMOUNT)]
+        self.has_requested_string()
+        self.has_requested_page_number()
+        self.has_requested_tweet_number()
