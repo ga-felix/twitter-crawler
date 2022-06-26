@@ -39,22 +39,30 @@ def write_tweets(payload: dict):
     write_objects(avro_writer, tweets)
 
 
+def get_data(payload: dict):
+    write_tweets(payload)
+    write_users(payload)
+    write_references(payload)
+
+
+def upload_data(uploader):
+    uploader.upload(
+        '/home/gafelix/Documentos/Git/twitter-crawler/avro/tweet/',
+        'gs://monitor_debate/twitter/tweet')
+    uploader.upload(
+        '/home/gafelix/Documentos/Git/twitter-crawler/avro/user/',
+        'gs://monitor_debate/twitter/user')
+    uploader.upload(
+        '/home/gafelix/Documentos/Git/twitter-crawler/avro/reference/',
+        'gs://monitor_debate/twitter/tweet_join')
+
+
 def main():
+    google_cloud_uploader = GoogleCloudUploader(
+        '/home/gafelix/Documentos/Git/twitter-crawler/src/cfg/key.json')
     for payload in Crawler(Caller(), Keys()).full_search_tweets('retweets_of:jairbolsonaro lang:pt', tweet_amount=10):
-        google_cloud_uploader = GoogleCloudUploader(
-            '/home/gafelix/Documentos/Git/twitter-crawler/src/cfg/key.json')
-        write_tweets(payload)
-        write_users(payload)
-        write_references(payload)
-        google_cloud_uploader.upload(
-            '/home/gafelix/Documentos/Git/twitter-crawler/avro/tweet/',
-            'gs://monitor_debate/twitter/tweet')
-        google_cloud_uploader.upload(
-            '/home/gafelix/Documentos/Git/twitter-crawler/avro/user/',
-            'gs://monitor_debate/twitter/user')
-        google_cloud_uploader.upload(
-            '/home/gafelix/Documentos/Git/twitter-crawler/avro/reference/',
-            'gs://monitor_debate/twitter/tweet_join')
+        get_data(payload)
+        upload_data(google_cloud_uploader)
 
 
 if __name__ == '__main__':
