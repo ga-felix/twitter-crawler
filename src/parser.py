@@ -52,7 +52,7 @@ class ReferencedTweetsParser:
 class ReferenceParser:
 
     def has_reference(self, tweet):
-        return tweet['referenced_tweets'] is not None
+        return 'referenced_tweets' in tweet
 
     def find_full_referenced_tweet(self, payload, id):
         for tweet in payload['includes']['tweets']:

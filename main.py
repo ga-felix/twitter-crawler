@@ -1,6 +1,6 @@
 from src import *
-from test import *
-import unittest
+#from test import *
+#import unittest
 import csv
 
 
@@ -68,13 +68,14 @@ def main():
     google_cloud_uploader = GoogleCloudUploader(
         '/home/gafelix/Documentos/Git/twitter-crawler/src/cfg/key.json')
     csv_path = '/home/gafelix/Documentos/LulaUsers.csv'
+    crawler = Crawler(Caller(), Keys())
     for account in open_csv_as_list(csv_path, 0):
         query = f'\"http\" from:{account} lang:pt'
-        for payload in Crawler(Caller(), Keys()).full_search_tweets(query, max_results=500, start_time='2022-06-01T00:00:00Z'):
+        for payload in crawler.full_search_tweets(query, max_results=500, start_time='2022-06-01T00:00:00Z'):
             get_data(payload)
             upload_data(google_cloud_uploader)
 
 
 if __name__ == '__main__':
-    unittest.main()
-    #main()
+    # unittest.main()
+    main()

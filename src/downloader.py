@@ -10,6 +10,7 @@ class Crawler:
     def __init__(self, caller, keys):
         self.caller = caller
         self.keys = keys
+        self.header = self.keys.get_header_with_bearer_token()
 
     base_url = 'https://api.twitter.com/2'
     expansions = 'author_id,referenced_tweets.id.author_id,referenced_tweets.id'
@@ -32,14 +33,13 @@ class Crawler:
         self.append_parameter_if_exists(parameters, end_time, 'end_time')
         self.append_parameter_if_exists(parameters, max_results, 'max_results')
         url = self.base_url + '/tweets/search/all'
-        header = self.keys.get_header_with_bearer_token(
-            self.full_search_tweets)
-        return self.caller.download(url, header, parameters, pages if pages else -1)
+        return self.caller.download(
+            url, self.header, parameters, pages if pages else -1)
 
 
 class Caller:
 
-    refresh_window = 15 * 60  # That is 15 minutes =)
+    TWITTER_API_REFRESH_TOKEN_WINDOW = 15 * 60  # That is 15 minutes =)
 
     def get(self, url, header, parameters):
         response = request(
@@ -76,7 +76,7 @@ class Caller:
             except StopIteration:
                 break
             except Exception as e:
-                sleep_time = self.refresh_window - \
+                sleep_time = self.TWITTER_API_REFRESH_TOKEN_WINDOW - \
                     self.seconds_passed_since(started)
                 sleep(sleep_time)
                 started = self.now()
@@ -106,7 +106,6 @@ class Singleton(type):
 class Keys(metaclass=Singleton):
 
     lock = Lock()
-    functions = dict()
 
     def __init__(self):
         self.tokens = self.read_tokens()
@@ -118,15 +117,18 @@ class Keys(metaclass=Singleton):
                 'TWITTER_BEARER_TOKENS enviroment variable was not found.')
         return set(tokens.split(','))
 
-    def get_bearer_token(self, function) -> str:
-        name = function.__name__
-        with self.lock:
-            if name not in self.functions:
-                self.functions[name] = self.tokens
-            elif not self.functions[name]:
-                raise ValueError('All bearer tokens have been taken!')
-            return self.functions[name].pop()
+    def is_not_empty(self, array: list) -> bool:
+        return len(array) > 0
 
-    def get_header_with_bearer_token(self, function) -> dict:
-        bearer_token = self.get_bearer_token(function)
+    def get_bearer_token(self) -> str:
+        with self.lock:
+            if self.is_not_empty(self.tokens):
+                print(
+                    f'Bearer token has been taken, {len(self.tokens) - 1} left.')
+                return self.tokens.pop()
+            else:
+                raise ValueError('All bearer tokens have been taken!')
+
+    def get_header_with_bearer_token(self) -> dict:
+        bearer_token = self.get_bearer_token()
         return {"Authorization": "Bearer {}".format(bearer_token)}
