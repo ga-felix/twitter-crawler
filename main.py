@@ -1,6 +1,7 @@
 from src import *
 from test import *
 import unittest
+import csv
 
 
 def write_objects(writer, objects: list):
@@ -57,12 +58,21 @@ def upload_data(uploader):
         'gs://monitor_debate/twitter/tweet_join')
 
 
+def open_csv_as_list(path: str, column: int, delimiter=',') -> list:
+    with open(path) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=delimiter)
+        return [row[column] for row in csv_reader]
+
+
 def main():
     google_cloud_uploader = GoogleCloudUploader(
         '/home/gafelix/Documentos/Git/twitter-crawler/src/cfg/key.json')
-    for payload in Crawler(Caller(), Keys()).full_search_tweets('retweets_of:jairbolsonaro lang:pt', tweet_amount=10):
-        get_data(payload)
-        upload_data(google_cloud_uploader)
+    csv_path = '/home/gafelix/Documentos/LulaUsers.csv'
+    for account in open_csv_as_list(csv_path, 0):
+        query = f'\"http\" from:{account} lang:pt'
+        for payload in Crawler(Caller(), Keys()).full_search_tweets(query, max_results=500, start_time='2022-06-01T00:00:00Z'):
+            get_data(payload)
+            upload_data(google_cloud_uploader)
 
 
 if __name__ == '__main__':

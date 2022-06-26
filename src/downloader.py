@@ -20,7 +20,7 @@ class Crawler:
         if value is not None:
             parameters[name] = value
 
-    def full_search_tweets(self, query, start_time=None, end_time=None, max_results=None, tweet_amount=None):
+    def full_search_tweets(self, query, start_time=None, end_time=None, max_results=None, pages=None):
         parameters = {
             'query': query,
             'expansions': self.expansions,
@@ -34,7 +34,7 @@ class Crawler:
         url = self.base_url + '/tweets/search/all'
         header = self.keys.get_header_with_bearer_token(
             self.full_search_tweets)
-        return self.caller.download(url, header, parameters, tweet_amount if tweet_amount else -1)
+        return self.caller.download(url, header, parameters, pages if pages else -1)
 
 
 class Caller:
