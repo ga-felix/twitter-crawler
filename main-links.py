@@ -2,7 +2,6 @@ from src import *
 # from test import *
 # import unittest
 import csv
-import datetime
 
 
 def write_objects(writer, objects: list):
@@ -42,14 +41,9 @@ def write_tweets(payload: dict):
 
 
 def get_data(payload: dict):
-    try:
-        write_references(payload)
-        write_tweets(payload)
-        write_users(payload)
-    except TypeError as err:
-        message = 'TypeError has occurred likely to private referenced tweet'
-        errors = len(payload['errors'])
-        print(f'[ERROR] {message} {errors} payload errors found.')
+    write_tweets(payload)
+    write_users(payload)
+    write_references(payload)
 
 
 def upload_data(uploader):
@@ -75,25 +69,18 @@ def is_payload_empty(payload: dict) -> bool:
 def main():
     google_cloud_uploader = GoogleCloudUploader(
         '/home/felix/twitter/twitter-crawler/src/cfg/key.json')
+    csv_path = ['/home/felix/twitter/twitter-crawler/LulaUsers.csv', '/home/felix/twitter/twitter-crawler/BolsonaroUsers.csv']
     crawler = Crawler(Caller(), Keys())
-    query = f'((Assassino OR #BolsonarismoMata OR Polarizacao OR Jorge OR Garanho OR Marcelo OR Arruda) is:retweet OR (from:jairbolsonaro)) lang:pt'
-    now = datetime.datetime.now()
-    print(f'[INFO] {now}: Running {query}.')
-    payloads = 0
-    for payload in crawler.full_search_tweets(query, max_results=500, pages=200, start_time='2022-07-10T10:00:00Z'):
-        try:
-            get_data(payload)
-        except Exception as e:
-            with open('log.txt', 'a+') as f:
-                now = datetime.datetime.now()
-                message = f'[ERROR] {now}: {e}'
-                print(message)
-                f.write(message)
-            f.close()
-        payloads += 1
-        now = datetime.datetime.now()
-        print(f'[INFO] {now}: {payloads} have been written.')
-    upload_data(google_cloud_uploader)
+    for csv_item in csv_path:
+        for account in open_csv_as_list(csv_item, 0):
+            query = f'\"http\" from:{account} lang:pt'
+            print(f'[INFO] Running {query}.')
+            for payload in crawler.full_search_tweets(query, max_results=500, start_time='2022-06-01T00:00:00Z'):
+                if is_payload_empty(payload):
+                    print(f'[INFO] Empty payload found. Ignoring {account}...')
+                    continue
+                get_data(payload)
+                upload_data(google_cloud_uploader)
 
 
 if __name__ == '__main__':

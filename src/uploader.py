@@ -12,6 +12,5 @@ class GoogleCloudUploader:
         return [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
 
     def upload(self, folder_path, target_path):
-        for filename in self.list_files(folder_path):
-            upload_command = f'gsutil -m cp {folder_path + filename} {target_path}'
-            system(upload_command)
+        upload_command = f'gsutil -m cp -r {folder_path} {target_path}'
+        system(upload_command)

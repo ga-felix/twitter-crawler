@@ -58,13 +58,14 @@ class ReferenceParser:
         for tweet in payload['includes']['tweets']:
             if tweet['id'] == id:
                 return tweet
+        raise TypeError('Payload has \"includes\" field but referenced tweet is missing because is probably private.')
 
     def find_references(self, tweet: dict, payload: dict) -> list:
         references = list()
         for referenced_tweet in tweet['referenced_tweets']:
             type = referenced_tweet['type']
             referenced_tweet = self.find_full_referenced_tweet(
-                payload, referenced_tweet['id'])
+                    payload, referenced_tweet['id'])
             references.append({
                 'id': tweet['id'] + referenced_tweet['id'] + type,
                 'tweet_referrer': tweet['id'],
